@@ -9,14 +9,15 @@ const socialConfig = {
     'radiatorpapi': { youtube: '@radiatorpapi', tiktok: 'radiatorpapi' },
     'mrwatson_gaming': {}, 
     'srvent_': {},
+    'nebbay': {},
     'theonegree': {},
-    'adventure_skittzy': {}
+    'adventure_skittzy': {},
 };
 
 const masterOrder = [
     'pointlessbish', 'sog78', 'mothmxnch', 'cantdropsoap',
     'dacobra1990', 'adventure_skittzy', 'srvent_',
-    'mrwatson_gaming', 'radiatorpapi', 'theonegree'
+    'mrwatson_gaming', 'radiatorpapi', 'theonegree', 'nebbay'
 ];
 
 function calculateUptime(startTime) {
