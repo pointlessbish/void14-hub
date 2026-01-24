@@ -1,48 +1,92 @@
 ---
-// src/pages/index.astro
-import '../styles/global.css';
+/* -------------------------------------------------------------------------- */
+/* SERVER-SIDE LOGIC: Runs on Cloudflare's Edge                               */
+/* -------------------------------------------------------------------------- */
+import "../styles/global.css";
 
-const title = "VOID14 | The Collective";
-const description = "Extracting from the void. Official hub for VOID14.";
+// 1. Get secrets from Cloudflare Environment Variables
+const CLIENT_ID = import.meta.env.TWITCH_CLIENT_ID;
+const CLIENT_SECRET = import.meta.env.TWITCH_CLIENT_SECRET;
+
+// 2. Define your collective members
+const memberUsernames = ["void14", "another_member", "member_three"]; 
+
+let members = [];
+
+try {
+  // A. Get App Access Token from Twitch
+  const authResponse = await fetch(
+    `https://id.twitch.tv/oauth2/token?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&grant_type=client_credentials`,
+    { method: "POST" }
+  );
+  const authData = await authResponse.json();
+  const accessToken = authData.access_token;
+
+  if (accessToken) {
+    // B. Check who is live
+    const query = memberUsernames.map(u => `user_login=${u}`).join('&');
+    const streamsResponse = await fetch(`https://api.twitch.tv/helix/streams?${query}`, {
+      headers: {
+        "Client-ID": CLIENT_ID,
+        "Authorization": `Bearer ${accessToken}`,
+      },
+    });
+    const streamsData = await streamsResponse.json();
+    
+    // Create a set of lowercase usernames currently live
+    const liveUsers = new Set(streamsData.data?.map(s => s.user_login.toLowerCase()) || []);
+
+    // C. Build the member objects
+    members = memberUsernames.map(username => ({
+      username,
+      isLive: liveUsers.has(username.toLowerCase()),
+      url: `https://twitch.tv/${username}`
+    }));
+  }
+} catch (error) {
+  console.error("VOID14 API Error:", error);
+  // Fallback: Show members as offline if the API fails
+  members = memberUsernames.map(username => ({ username, isLive: false, url: `https://twitch.tv/${username}` }));
+}
 ---
 
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title}</title>
-    
-    <meta property="og:type" content="website">
-    <meta property="og:title" content={title}>
-    <meta property="og:description" content={description}>
-    <meta property="og:theme-color" content="#9d00ff">
-    <meta property="og:image" content="/PREVIEW.png">
-    
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="/PREVIEW.png">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="/void14.png">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VOID14 | The Collective</title>
 </head>
 <body>
-    <div class="background-vignette"></div>
     <div class="scanline"></div>
-    
-    <div class="container">
+    <div class="background-vignette"></div>
+
+    <main class="container">
         <header>
-            <h1 class="profile-title" id="glitch-title">VOID14</h1>
+            <h1 class="profile-title">VOID14</h1>
             <p class="profile-subtitle">EXTRACTING FROM THE VOID</p>
         </header>
 
-        <div class="section-label">The Collective</div>
-        <div id="member-list" class="member-list-container">
-            <div class="loading">Infiltrating the Void...</div>
+        <div class="section-label">THE COLLECTIVE</div>
+
+        <div id="member-list">
+            {members.map((member) => (
+                <a href={member.url} target="_blank" class={`link-card ${member.isLive ? 'is-live' : ''}`}>
+                    <div class="card-content">
+                        <span class="member-name">{member.username.toUpperCase()}</span>
+                        {member.isLive && (
+                            <span class="live-indicator">
+                                <span class="blink-dot"></span> LIVE
+                            </span>
+                        )}
+                    </div>
+                </a>
+            ))}
         </div>
 
-        <footer>&copy; 2026 VOID14.WTF</footer>
-    </div>
-
-    <script src="../scripts/void-logic.js"></script>
+        <footer>
+            <p class="copyright">© 2026 VOID14.WTF</p>
+        </footer>
+    </main>
 </body>
 </html>
