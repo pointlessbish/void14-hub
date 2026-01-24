@@ -7,7 +7,7 @@ const socialConfig = {
     'cantdropsoap': { tiktok: 'cantdropsoap' },
     'dacobra1990': { youtube: '@CobraGaming-b3o', tiktok: 'dacobra1990' },
     'radiatorpapi': { youtube: '@radiatorpapi', tiktok: 'radiatorpapi' },
-    'mrwatson_gaming': {}, 
+    'mrwatson_gaming': { tiktok: 'lukechicago' }, 
     'srvent_': {},
     'nebbay': {},
     'theonegree': {},
