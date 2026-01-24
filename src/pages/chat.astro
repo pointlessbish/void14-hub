@@ -1,0 +1,97 @@
+---
+import '../styles/chat.css';
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VOID14 | Mega Uplink</title>
+</head>
+<body>
+    <div id="status">VOID_OS_BOOTING</div>
+    <ul id="chat-log"></ul>
+
+    <script>
+        import tmi from 'tmi.js';
+
+        const chatLog = document.getElementById('chat-log');
+        const status = document.getElementById('status');
+        const params = new URLSearchParams(window.location.search);
+        
+        const streamerAvatars = new Map();
+        let globalBadges = null;
+
+        async function start() {
+            // 1. Fetch Streamer Data (Required)
+            try {
+                const memberRes = await fetch('https://api.void14.wtf');
+                const memberData = await memberRes.json();
+                memberData.users.forEach(u => streamerAvatars.set(u.login.toLowerCase(), u.profile_image_url));
+            } catch (e) {
+                console.error("Member fetch failed:", e);
+                status.innerText = "MEMBER_SYNC_ERROR";
+            }
+
+            // 2. Fetch Badges (Optional - won't break chat if this fails)
+            fetch('https://api.void14.wtf/badges')
+                .then(res => res.json())
+                .then(data => {
+                    globalBadges = data.badge_sets || data;
+                    console.log("Badges Loaded:", globalBadges);
+                })
+                .catch(e => console.error("Badge fetch failed:", e));
+
+            // 3. Setup Channels
+            const queryChannel = params.get('channel') || window.location.search.replace('?', '');
+            const finalChannels = queryChannel ? [queryChannel.toLowerCase()] : Array.from(streamerAvatars.keys());
+
+            const client = new tmi.Client({
+                connection: { secure: true, reconnect: true },
+                channels: finalChannels.length > 0 ? finalChannels : ['pointlessbish']
+            });
+
+            client.on('message', (chan, tags, message, self) => {
+                if (self) return;
+
+                const channelLogin = chan.replace('#', '').toLowerCase();
+                const streamerPfp = streamerAvatars.get(channelLogin) || `https://ui-avatars.com/api/?name=${channelLogin}&background=333&color=fff`;
+
+                // Render Badges if available
+                let badgeHtml = '';
+                if (tags.badges && globalBadges) {
+                    badgeHtml = '<div class="badge-container">';
+                    Object.entries(tags.badges).forEach(([name, version]) => {
+                        const url = globalBadges[name]?.versions?.[version]?.image_url_1x;
+                        if (url) badgeHtml += `<img src="${url}" class="chat-badge">`;
+                    });
+                    badgeHtml += '</div>';
+                }
+
+                const li = document.createElement('li');
+                li.className = 'message-pill';
+                const userColor = tags.color || '#00ffff';
+
+                li.innerHTML = `
+                    <img class="avatar-badge" src="${streamerPfp}">
+                    ${badgeHtml}
+                    <span class="user-name" style="color: ${userColor}">${tags['display-name']}</span>
+                    <span class="separator">:</span>
+                    <span class="message-text">${message}</span>
+                `;
+
+                chatLog.prepend(li);
+                setTimeout(() => {
+                    li.classList.add('fade-out');
+                    setTimeout(() => li.remove(), 450);
+                }, 20000);
+            });
+
+            client.connect().then(() => {
+                status.innerText = `UPLINK_LIVE: ${finalChannels.length} CH`;
+            });
+        }
+
+        start();
+    </script>
+</body>
+</html>
