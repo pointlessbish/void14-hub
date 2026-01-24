@@ -30,8 +30,12 @@ function calculateUptime(startTime) {
 
 export async function refreshVoid() {
     try {
-        const res = await fetch('/api/live');
+        // Added timestamp to URL to force fresh data
+        const res = await fetch(`/api/live?t=${new Date().getTime()}`);
         const { streams, users } = await res.json();
+        
+        if (!users) return;
+
         const container = document.getElementById('member-list');
         const streamDataMap = {};
         streams.forEach(s => streamDataMap[s.user_login.toLowerCase()] = s);
@@ -111,6 +115,7 @@ export function initGlitch() {
     }, 400);
 }
 
+// Initialization
 initGlitch();
 refreshVoid();
-setInterval(refreshVoid, 60000);
+setInterval(refreshVoid, 300000); // 5 minutes refresh
