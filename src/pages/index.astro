@@ -1,0 +1,48 @@
+---
+// src/pages/index.astro
+import '../styles/global.css';
+
+const title = "VOID14 | The Collective";
+const description = "Extracting from the void. Official hub for VOID14.";
+---
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    
+    <meta property="og:type" content="website">
+    <meta property="og:title" content={title}>
+    <meta property="og:description" content={description}>
+    <meta property="og:theme-color" content="#9d00ff">
+    <meta property="og:image" content="/PREVIEW.png">
+    
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="/PREVIEW.png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="/void14.png">
+</head>
+<body>
+    <div class="background-vignette"></div>
+    <div class="scanline"></div>
+    
+    <div class="container">
+        <header>
+            <h1 class="profile-title" id="glitch-title">VOID14</h1>
+            <p class="profile-subtitle">EXTRACTING FROM THE VOID</p>
+        </header>
+
+        <div class="section-label">The Collective</div>
+        <div id="member-list" class="member-list-container">
+            <div class="loading">Infiltrating the Void...</div>
+        </div>
+
+        <footer>&copy; 2026 VOID14.WTF</footer>
+    </div>
+
+    <script src="../scripts/void-logic.js"></script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+/* src/styles/global.css */
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+:root {
+    /* Core Theme Colors */
+    --bg-dark: #07030d;
+    --text-main: #ffffff;
+    --text-dim: rgba(255, 255, 255, 0.4);
+    
+    /* Void Branding */
+    --void-purple: #9d00ff;
+    --void-cyan: #00f2ff;
+    
+    /* Twitch Branding */
+    --twitch-purple: #9146ff;
+    
+    /* Social Branding */
+    --tiktok-pink: #ff0051;
+    --tiktok-cyan: #00f2ea;
+    --brand-youtube: #ff0000;
+    --brand-discord: #5865F2;
+    
+    /* UI Elements */
+    --glass-bg: #0c0716;
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+body {
+    margin: 0;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* --- THE DUAL SCANLINE SYSTEM --- */
+
+.scanline {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* 1. Static CRT Pixel Texture */
+    background: linear-gradient(
+        to bottom,
+        transparent 50%,
+        rgba(0, 0, 0, 0.18) 51%
+    );
+    background-size: 100% 4px;
+    z-index: 10;
+    pointer-events: none;
+    animation: scanlineScroll 0.25s linear infinite;
+}
+
+/* 2. The Slow Scroll-Scanline Beam (from your old site) */
+.scanline::after {
+    content: "";
+    position: absolute;
+    top: -100px;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    background: linear-gradient(
+        to bottom,
+        transparent,
+        rgba(0, 242, 255, 0.04), /* Subtle cyan beam */
+        transparent
+    );
+    animation: scanBeam 8s linear infinite;
+}
+
+@keyframes scanlineScroll {
+    from { background-position: 0 0; }
+    to { background-position: 0 4px; }
+}
+
+@keyframes scanBeam {
+    0% { top: -10%; }
+    100% { top: 110%; }
+}
+
+/* --- BACKGROUND & CONTAINER --- */
+
+.background-vignette {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/void14.png');
+    background-size: cover;
+    background-position: center;
+    filter: blur(50px) brightness(0.2);
+    transform: scale(1.1);
+    z-index: 1;
+}
+
+.container {
+    width: 100%;
+    max-width: 440px;
+    padding: 60px 20px;
+    text-align: center;
+    z-index: 5;
+}
+
+/* --- TYPOGRAPHY --- */
+
+.profile-title {
+    font-size: 3.5rem;
+    font-weight: 900;
+    letter-spacing: 8px;
+    margin: 0;
+    background: linear-gradient(45deg, var(--void-purple), var(--void-cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.profile-subtitle {
+    font-size: 0.7rem;
+    letter-spacing: 4px;
+    opacity: 0.5;
+    margin-bottom: 40px;
+    text-transform: uppercase;
+}
+
+.section-label {
+    text-align: left;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 30px 0 10px 5px;
+    color: var(--void-cyan);
+    font-weight: bold;
+}
+
+/* --- CARDS & ANIMATED BORDERS --- */
+
+.link-card {
+    position: relative;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 14px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(10px);
+    transition: transform 0.2s ease;
+}
+
+/* Animated Live Border (Purple & Cyan) */
+.is-live {
+    border: 1px solid transparent;
+    background: 
+        linear-gradient(var(--glass-bg), var(--glass-bg)) padding-box, 
+        linear-gradient(var(--angle), var(--void-purple), var(--void-cyan), var(--void-purple)) border-box;
+    animation: rotateGradient 4s linear infinite;
+    box-shadow: 0 0 20px rgba(157, 0, 255, 0.15);
+}
+
+@keyframes rotateGradient {
+  to { --angle: 360deg; }
+}
+
+.card-header-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-main-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text-main);
+    flex-grow: 1;
+}
+
+.card-main-link::before {
+    content: '';
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    margin-right: 15px;
+    background-image: var(--profile-pic);
+    background-size: cover;
+    border: 1px solid var(--glass-border);
+}
+
+.member-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-align: left;
+}
+
+/* --- STATUS & SOCIALS --- */
+
+.status {
+    font-size: 0.62rem;
+    opacity: 0.4;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status.live {
+    color: var(--twitch-purple);
+    opacity: 1;
+    font-weight: 800;
+}
+
+.status i { font-size: 0.7rem; }
+.separator { opacity: 0.3; }
+
+.socials-row { display: flex; gap: 8px; }
+
+.social-icon {
+    text-decoration: none;
+    color: var(--text-dim);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s ease;
+}
+
+.social-icon:hover {
+    color: var(--text-main);
+    transform: translateY(-2px);
+}
+
+/* TikTok Hover Gradient (Cyan & Pink) */
+.social-icon.tiktok:hover {
+    border: 1px solid transparent;
+    background: 
+        linear-gradient(var(--bg-dark), var(--bg-dark)) padding-box, 
+        linear-gradient(var(--angle), var(--tiktok-cyan), var(--tiktok-pink), var(--tiktok-cyan)) border-box;
+    animation: rotateGradient 1.5s linear infinite;
+}
+
+.social-icon.twitch:hover { border-color: var(--twitch-purple); color: var(--twitch-purple); }
+.social-icon.youtube:hover { border-color: var(--brand-youtube); color: var(--brand-youtube); }
+.social-icon.discord:hover { border-color: var(--brand-discord); color: var(--brand-discord); }
+
+.stream-thumb {
+    width: 100%;
+    border-radius: 10px;
+    margin-top: 15px;
+    border: 1px solid rgba(0, 242, 255, 0.2);
+    display: block;
+}
+
+footer {
+    margin-top: 60px;
+    font-size: 0.65rem;
+    opacity: 0.3;
+    letter-spacing: 2px;
+}
