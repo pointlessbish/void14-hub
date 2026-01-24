@@ -30,11 +30,15 @@ function calculateUptime(startTime) {
 
 export async function refreshVoid() {
     try {
-        // Added timestamp to URL to force fresh data
-        const res = await fetch(`/api/live?t=${new Date().getTime()}`);
+        const workerUrl = 'https://api.void14.wtf'; 
+        
+        const res = await fetch(`${workerUrl}?t=${Date.now()}`);
+        
+        if (!res.ok) throw new Error(`API error: ${res.status}`);
+        
         const { streams, users } = await res.json();
         
-        if (!users) return;
+        if (!users || users.length === 0) return;
 
         const container = document.getElementById('member-list');
         const streamDataMap = {};
@@ -92,12 +96,14 @@ export async function refreshVoid() {
                     </div>
                     ${isTopLive ? `
                         <a href="https://twitch.tv/${login}" target="_blank" class="stream-thumb-link">
-                            <img src="https://static-cdn.jtvnw.net/previews-ttv/live_user_${login}-440x248.jpg?t=${new Date().getTime()}" class="stream-thumb" />
+                            <img src="https://static-cdn.jtvnw.net/previews-ttv/live_user_${login}-440x248.jpg?t=${Date.now()}" class="stream-thumb" />
                         </a>
                     ` : ''}
                 </div>`;
         }).join('');
-    } catch (e) { console.error("Void Fetch Error", e); }
+    } catch (e) { 
+        console.error("Void Fetch Error", e); 
+    }
 }
 
 export function initGlitch() {
@@ -115,7 +121,7 @@ export function initGlitch() {
     }, 400);
 }
 
-// Initialization
+// Initializing
 initGlitch();
 refreshVoid();
-setInterval(refreshVoid, 300000); // 5 minutes refresh
+setInterval(refreshVoid, 60000); // 1 minute refresh
