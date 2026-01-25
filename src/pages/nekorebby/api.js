@@ -1,59 +1,45 @@
-import { verifySignature } from '../../lib/twitch'; // We'll make this next
+// src/pages/nekorebby/api.js
+import { verifySignature } from '../../lib/twitch';
 
 export const POST = async ({ request, locals }) => {
-  const { env } = locals.runtime;
-  const bodyText = await request.text();
-  const headers = request.headers;
+    const { env } = locals.runtime;
+    const bodyText = await request.text();
+    const headers = request.headers;
 
-  // 1. Verify Security (Crucial so no one fakes events)
-  if (!await verifySignature(headers, bodyText, env.TWITCH_WEBHOOK_SECRET)) {
-    return new Response('Unauthorized', { status: 403 });
-  }
+    // 1. Security check: Is this REALLY Twitch?
+    // This uses the verifySignature function we wrote earlier
+    const isValid = await verifySignature(headers, bodyText, env.TWITCH_WEBHOOK_SECRET);
+    if (!isValid) return new Response('Unauthorized', { status: 403 });
 
-  const json = JSON.parse(bodyText);
-  const msgType = headers.get('Twitch-Eventsub-Message-Type');
+    const json = JSON.parse(bodyText);
+    const msgType = headers.get('Twitch-Eventsub-Message-Type');
 
-  // 2. Handle the Twitch "Challenge" (Verification handshake)
-  if (msgType === 'webhook_callback_verification') {
-    return new Response(json.challenge, { 
-      status: 200, 
-      headers: { 'Content-Type': 'text/plain' } 
-    });
-  }
-
-  // 3. Handle Actual Events (Chat, Follows, etc.)
-  if (msgType === 'notification') {
-    const event = json.event;
-    const subType = json.subscription.type;
-
-    // Example Action: Respond to Chat
-    if (subType === 'channel.chat.message') {
-      if (event.message.text.toLowerCase().includes('!nekorebby')) {
-        await replyToChat(event.broadcaster_user_id, "🐾 Nekorebby is online! Nya!", env);
-      }
+    // 2. The Handshake (Twitch verification)
+    // When you first sign up, Twitch sends a "challenge" string. 
+    // You MUST send it back exactly to activate the bot.
+    if (msgType === 'webhook_callback_verification') {
+        console.log("Nekorebby Protocol: Webhook Verified.");
+        return new Response(json.challenge, { status: 200 });
     }
-    
-    // Example Action: Ping Overlay (Ably)
-    if (subType === 'channel.follow') {
-        // Code to send data to your overlay.astro page via Ably goes here
-    }
-  }
 
-  return new Response('OK', { status: 200 });
+    // 3. Handle Actual Events
+    if (msgType === 'notification') {
+        const { event, subscription } = json;
+
+        // Logic for Chat Messages
+        if (subscription.type === 'channel.chat.message') {
+            const user = event.chatter_user_name;
+            const message = event.message.text.trim();
+
+            console.log(`[VOID-CHAT] ${user}: ${message}`);
+
+            // COMMAND: !void
+            if (message.toLowerCase() === '!void') {
+                // We will add 'sendChat' here in the next step!
+                console.log("Command Triggered: !void");
+            }
+        }
+    }
+
+    return new Response('OK', { status: 200 });
 };
-
-async function replyToChat(broadcasterId, message, env) {
-  await fetch('https://api.twitch.tv/helix/chat/messages', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${env.BOT_ACCESS_TOKEN}`,
-      'Client-Id': env.TWITCH_CLIENT_ID,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      broadcaster_id: broadcasterId,
-      sender_id: env.BOT_USER_ID,
-      message: message
-    })
-  });
-}
