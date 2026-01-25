@@ -1,0 +1,69 @@
+/* Container for the whole page */
+#selection-screen {
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* THE GRID SYSTEM */
+.streamer-grid {
+    display: grid;
+    /* This creates as many 200px columns as fit, then grows them to fill space */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    width: 100%;
+    max-width: 1200px; /* Keeps the grid from getting too wide on ultrawide monitors */
+    padding: 20px;
+    justify-content: center;
+}
+
+/* Individual Cards - Rounded & Sleek */
+.streamer-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 30px 20px;
+    border-radius: 32px; /* Very rounded like index.astro */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    backdrop-filter: blur(12px);
+    text-align: center;
+}
+
+.streamer-card:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: #00ffff;
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 255, 255, 0.1);
+}
+
+/* Rounded Avatars */
+.streamer-card img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-bottom: 15px;
+    border: 3px solid rgba(255, 255, 255, 0.05);
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.streamer-card:hover img {
+    transform: scale(1.1);
+    border-color: #00ffff;
+}
+
+/* Name text */
+.streamer-card span {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-size: 0.9rem;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}

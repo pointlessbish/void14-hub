@@ -1,0 +1,117 @@
+---
+import Layout from '../layouts/Layout.astro';
+import '../styles/chat.css';
+
+export const prerender = false;
+const { channel } = Astro.params;
+---
+
+<Layout title={`VOID14 UPLINK | ${channel}`} isOverlay={true}>
+    <ul id="chat-log"></ul>
+
+    <script is:inline src="https://bundle.run/tmi.js@1.8.5"></script>
+
+    <script is:inline>
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        const channelID = pathParts[pathParts.length - 1]?.toLowerCase();
+        const chatLog = document.getElementById('chat-log');
+
+        async function initChat() {
+            // Check if TMI is loaded yet
+            if (typeof tmi === 'undefined') {
+                console.warn("VOID_OS: TMI_NOT_READY... RETRYING");
+                setTimeout(initChat, 500); 
+                return;
+            }
+
+            if (!channelID || channelID === 'chat') return;
+
+            console.log(`%c VOID_OS %c UPLINK_INIT: ${channelID} `, 'background: #9d00ff; color: #fff', 'background: #000; color: #00f2ff');
+
+            try {
+                const res = await fetch('https://api.void14.wtf');
+                const data = await res.json();
+                const user = data.users?.find(u => u.login.toLowerCase() === channelID);
+                const pfp = user ? user.profile_image_url : '';
+
+                const client = new tmi.Client({
+                    connection: { secure: true, reconnect: true },
+                    channels: [channelID]
+                });
+
+                client.on('message', (chan, tags, message, self) => {
+                    if (self) return;
+                    const userColor = tags.color || '#00f2ff';
+                    const li = document.createElement('li');
+                    li.className = 'message-pill';
+                    li.style.setProperty('--user-color', userColor);
+
+                    li.innerHTML = `
+                        <img class="avatar-badge" src="${pfp}">
+                        <div class="message-content">
+                            <span class="user-name" style="color: ${userColor}">${tags['display-name']}</span>
+                            <span class="message-text">${message}</span>
+                        </div>
+                    `;
+
+                    chatLog.appendChild(li);
+                    if (chatLog.children.length > 20) chatLog.firstElementChild.remove();
+                    window.scrollTo(0, document.body.scrollHeight);
+                });
+
+                await client.connect();
+                console.log("%c UPLINK_LIVE ", 'background: #00f2ff; color: #000');
+            } catch (err) {
+                console.error("VOID_OS_CRITICAL:", err);
+            }
+        }
+
+        // Run when window is ready
+        window.addEventListener('load', initChat);
+    </script>
+</Layout>
+
+<style>
+    :global(body.overlay-mode) {
+        background: transparent !important;
+        background-color: rgba(0,0,0,0) !important;
+    }
+
+    #chat-log {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        width: 450px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    :global(.message-pill) {
+        display: flex;
+        align-items: center;
+        background: rgba(12, 7, 22, 0.85);
+        backdrop-filter: blur(10px);
+        padding: 12px 16px;
+        border-radius: 14px;
+        border-left: 4px solid var(--user-color);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        animation: pill-slide 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+    }
+
+    :global(.avatar-badge) {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 15px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes pill-slide {
+        from { opacity: 0; transform: translateX(-30px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+</style>

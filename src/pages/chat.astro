@@ -1,97 +1,150 @@
 ---
-import '../styles/chat.css';
+import Layout from '../layouts/Layout.astro';
+import '../styles/chat-select.css';
 ---
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>VOID14 | Mega Uplink</title>
-</head>
-<body>
-    <div id="status">VOID_OS_BOOTING</div>
-    <ul id="chat-log"></ul>
 
-    <script>
-        import tmi from 'tmi.js';
-
-        const chatLog = document.getElementById('chat-log');
-        const status = document.getElementById('status');
-        const params = new URLSearchParams(window.location.search);
+<Layout title="VOID14 | SELECT_SOURCE">
+    <main id="selection-screen">
+        <div class="header-section">
+            <h1 class="grid-title">PROTOCOL: SELECT_UPLINK_SOURCE</h1>
+            <p class="subtitle">CONNECTING_TO_ACTIVE_NODES...</p>
+        </div>
         
-        const streamerAvatars = new Map();
-        let globalBadges = null;
+        <div id="grid-container" class="streamer-grid">
+            <div class="loading-state">
+                <span class="pulse-text">SCANNING_FREQUENCIES...</span>
+            </div>
+        </div>
 
-        async function start() {
-            // 1. Fetch Streamer Data (Required)
+        <div class="footer-status">
+            <span class="pulse-dot"></span> 
+            <span id="system-text">SYSTEM_READY: STANDING_BY</span>
+        </div>
+    </main>
+
+    <script is:inline>
+        async function loadStreamerGrid() {
+            const container = document.getElementById('grid-container');
+            const systemText = document.getElementById('system-text');
+            
             try {
-                const memberRes = await fetch('https://api.void14.wtf');
-                const memberData = await memberRes.json();
-                memberData.users.forEach(u => streamerAvatars.set(u.login.toLowerCase(), u.profile_image_url));
-            } catch (e) {
-                console.error("Member fetch failed:", e);
-                status.innerText = "MEMBER_SYNC_ERROR";
-            }
+                // Fetch the list of streamers from your Worker API
+                const res = await fetch('https://api.void14.wtf');
+                if (!res.ok) throw new Error('API_OFFLINE');
+                
+                const data = await res.json();
+                const users = data.users || [];
 
-            // 2. Fetch Badges (Optional - won't break chat if this fails)
-            fetch('https://api.void14.wtf/badges')
-                .then(res => res.json())
-                .then(data => {
-                    globalBadges = data.badge_sets || data;
-                    console.log("Badges Loaded:", globalBadges);
-                })
-                .catch(e => console.error("Badge fetch failed:", e));
+                // Clear the loading state
+                container.innerHTML = ''; 
 
-            // 3. Setup Channels
-            const queryChannel = params.get('channel') || window.location.search.replace('?', '');
-            const finalChannels = queryChannel ? [queryChannel.toLowerCase()] : Array.from(streamerAvatars.keys());
+                users.forEach(user => {
+                    // Create the rounded card
+                    const card = document.createElement('div');
+                    card.className = 'streamer-card';
+                    card.innerHTML = `
+                        <div class="card-glow"></div>
+                        <img src="${user.profile_image_url}" alt="${user.display_name}" loading="lazy">
+                        <span>${user.display_name}</span>
+                    `;
 
-            const client = new tmi.Client({
-                connection: { secure: true, reconnect: true },
-                channels: finalChannels.length > 0 ? finalChannels : ['pointlessbish']
-            });
+                    // Click handler to route to /[channel]
+                    card.onclick = () => {
+                        systemText.innerText = `ESTABLISHING_UPLINK: ${user.login.toUpperCase()}...`;
+                        // This matches your flat file structure src/pages/[channel].astro
+                        window.location.href = `/${user.login.toLowerCase()}`;
+                    };
 
-            client.on('message', (chan, tags, message, self) => {
-                if (self) return;
+                    container.appendChild(card);
+                });
 
-                const channelLogin = chan.replace('#', '').toLowerCase();
-                const streamerPfp = streamerAvatars.get(channelLogin) || `https://ui-avatars.com/api/?name=${channelLogin}&background=333&color=fff`;
-
-                // Render Badges if available
-                let badgeHtml = '';
-                if (tags.badges && globalBadges) {
-                    badgeHtml = '<div class="badge-container">';
-                    Object.entries(tags.badges).forEach(([name, version]) => {
-                        const url = globalBadges[name]?.versions?.[version]?.image_url_1x;
-                        if (url) badgeHtml += `<img src="${url}" class="chat-badge">`;
-                    });
-                    badgeHtml += '</div>';
-                }
-
-                const li = document.createElement('li');
-                li.className = 'message-pill';
-                const userColor = tags.color || '#00ffff';
-
-                li.innerHTML = `
-                    <img class="avatar-badge" src="${streamerPfp}">
-                    ${badgeHtml}
-                    <span class="user-name" style="color: ${userColor}">${tags['display-name']}</span>
-                    <span class="separator">:</span>
-                    <span class="message-text">${message}</span>
+                systemText.innerText = `NODES_DETECTED: ${users.length} ACTIVE_CHANNELS`;
+            } catch (err) {
+                console.error(err);
+                systemText.innerText = "CRITICAL_FAILURE: UNABLE_TO_SYNC";
+                container.innerHTML = `
+                    <div class="error-msg">
+                        <p>SOURCE_LIST_UNAVAILABLE</p>
+                        <button onclick="location.reload()" style="background:transparent; border:1px solid #00ffff; color:#00ffff; padding:5px 10px; cursor:pointer; margin-top:10px;">RETRY_SCAN</button>
+                    </div>
                 `;
-
-                chatLog.prepend(li);
-                setTimeout(() => {
-                    li.classList.add('fade-out');
-                    setTimeout(() => li.remove(), 450);
-                }, 20000);
-            });
-
-            client.connect().then(() => {
-                status.innerText = `UPLINK_LIVE: ${finalChannels.length} CH`;
-            });
+            }
         }
 
-        start();
+        // Initialize on load
+        loadStreamerGrid();
     </script>
-</body>
-</html>
+</Layout>
+
+<style>
+    /* Inline styles for the specific page structure to ensure alignment */
+    #selection-screen {
+        position: relative;
+        z-index: 10;
+        padding-top: 80px;
+    }
+
+    .header-section {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+
+    .grid-title {
+        font-family: 'Inter', sans-serif;
+        font-weight: 900;
+        font-size: 1.5rem;
+        letter-spacing: 4px;
+        color: #fff;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    }
+
+    .subtitle {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.7rem;
+        color: rgba(0, 255, 255, 0.5);
+        margin-top: 5px;
+        letter-spacing: 2px;
+    }
+
+    .footer-status {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.65rem;
+        color: rgba(255, 255, 255, 0.4);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(0,0,0,0.5);
+        padding: 5px 15px;
+        border-radius: 20px;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .pulse-dot {
+        width: 6px;
+        height: 6px;
+        background: #00ffff;
+        border-radius: 50%;
+        box-shadow: 0 0 8px #00ffff;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 0.4; }
+        50% { opacity: 1; }
+        100% { opacity: 0.4; }
+    }
+
+    .loading-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 100px;
+        color: rgba(255, 255, 255, 0.2);
+        font-size: 0.8rem;
+        letter-spacing: 2px;
+    }
+</style>
