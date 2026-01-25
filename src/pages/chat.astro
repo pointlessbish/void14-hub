@@ -52,7 +52,7 @@ import '../styles/chat-select.css';
                     card.onclick = () => {
                         systemText.innerText = `ESTABLISHING_UPLINK: ${user.login.toUpperCase()}...`;
                         // This matches your flat file structure src/pages/chat/[channel].astro
-                        window.location.href = `/chat/${user.login.toLowerCase()}`;
+                        window.location.href = `/chat-overlay?channel=${user.login.toLowerCase()}`;
                     };
 
                     container.appendChild(card);
