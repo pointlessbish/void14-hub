@@ -48,11 +48,11 @@ import '../styles/chat-select.css';
                         <span>${user.display_name}</span>
                     `;
 
-                    // Click handler to route to /[channel]
+                    // Click handler to route to /chat/[channel]
                     card.onclick = () => {
                         systemText.innerText = `ESTABLISHING_UPLINK: ${user.login.toUpperCase()}...`;
-                        // This matches your flat file structure src/pages/[channel].astro
-                        window.location.href = `/${user.login.toLowerCase()}`;
+                        // This matches your flat file structure src/pages/chat/[channel].astro
+                        window.location.href = `/chat/${user.login.toLowerCase()}`;
                     };
 
                     container.appendChild(card);

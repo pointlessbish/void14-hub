@@ -37,9 +37,15 @@
 
 .streamer-card:hover {
     background: rgba(255, 255, 255, 0.07);
-    border-color: #00ffff;
     transform: translateY(-10px);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 255, 255, 0.1);
+
+    /* THE ONLY PART I'M FUCKING WITH: */
+    border: 1px solid transparent;
+    background: 
+        linear-gradient(var(--glass-bg), var(--glass-bg)) padding-box, 
+        linear-gradient(var(--angle), var(--void-purple), var(--void-cyan), var(--void-purple)) border-box;
+    animation: rotateGradient 4s linear infinite;
 }
 
 /* Rounded Avatars */
