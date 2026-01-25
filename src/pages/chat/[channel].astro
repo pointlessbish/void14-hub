@@ -1,36 +1,100 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-// If you have a global chat.css, import it here
-// import '../../styles/chat.css';
-
 export const prerender = false;
 const { channel } = Astro.params;
+
+if (!channel) {
+    return Astro.redirect('/chat');
+}
 ---
 
-<Layout title={`VOID14 UPLINK | ${channel}`} isOverlay={true}>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VOID14 | {channel}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ABSOLUTE TRANSPARENCY FOR OBS */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent !important;
+            overflow: hidden;
+        }
+
+        #chat-log {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 420px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message-pill {
+            display: flex;
+            background: rgba(12, 7, 22, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 14px 18px;
+            border-radius: 14px;
+            border-left: 4px solid var(--user-color);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            animation: glitchIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+        }
+
+        .user-name {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .message-text {
+            font-family: 'Inter', sans-serif;
+            color: #ffffff;
+            font-size: 1rem;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        @keyframes glitchIn {
+            0% { transform: translateX(-50px) skewX(20deg); opacity: 0; filter: hue-rotate(90deg); }
+            60% { transform: translateX(5px) skewX(-10deg); opacity: 1; filter: hue-rotate(0deg); }
+            80% { transform: translateX(-2px) skewX(5deg); }
+            100% { transform: translateX(0) skewX(0deg); }
+        }
+    </style>
+</head>
+<body>
     <ul id="chat-log"></ul>
 
-    <script is:inline src="https://cdn.jsdelivr.net/npm/tmi.js@1.8.5/bit/tmi.min.js"></script>
+    <script is:inline src="https://unpkg.com/tmi.js@1.8.5/bit/tmi.min.js"></script>
 
-    <script is:inline>
+    <script is:inline define:vars={{ channel }}>
         async function initChat() {
-            // 1. THE CONNECTION FIX: Wait for the library to be globally available
+            // Wait for library to exist on window
             if (typeof window.tmi === 'undefined') {
                 console.warn("VOID_OS: SIGNAL_INTERRUPTED... RETRYING_UPLINK");
                 setTimeout(initChat, 500); 
                 return;
             }
 
-            // 2. ROUTING FIX: Grab the channel name from the /chat/CHANNEL URL structure
-            const pathParts = window.location.pathname.split('/').filter(Boolean);
-            const channelID = pathParts[pathParts.length - 1]?.toLowerCase();
-
-            if (!channelID || channelID === 'chat') return;
-
-            console.log(`%c VOID_OS %c ESTABLISHING_UPLINK: ${channelID} `, 'background: #9d00ff; color: #fff', 'background: #000; color: #00f2ff');
+            const channelID = channel.toLowerCase();
 
             try {
-                const client = new tmi.Client({
+                const client = new window.tmi.Client({
                     connection: { secure: true, reconnect: true },
                     channels: [channelID]
                 });
@@ -42,8 +106,7 @@ const { channel } = Astro.params;
                     const userColor = tags.color || '#00f2ff';
                     const li = document.createElement('li');
                     
-                    // Add the glitch class for the entrance
-                    li.className = 'message-pill glitch-entry';
+                    li.className = 'message-pill';
                     li.style.setProperty('--user-color', userColor);
 
                     li.innerHTML = `
@@ -55,7 +118,6 @@ const { channel } = Astro.params;
 
                     chatLog.appendChild(li);
                     
-                    // Cleanup for performance
                     if (chatLog.children.length > 15) {
                         chatLog.firstElementChild.remove();
                     }
@@ -70,68 +132,7 @@ const { channel } = Astro.params;
             }
         }
 
-        window.addEventListener('load', initChat);
+        initChat();
     </script>
-</Layout>
-
-<style>
-    /* Full transparency for OBS Browser Source */
-    :global(body.overlay-mode) {
-        background: transparent !important;
-        background-color: rgba(0,0,0,0) !important;
-    }
-
-    #chat-log {
-        position: fixed;
-        bottom: 30px;
-        left: 30px;
-        width: 420px;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    :global(.message-pill) {
-        display: flex;
-        background: rgba(12, 7, 22, 0.9);
-        backdrop-filter: blur(10px);
-        padding: 14px 18px;
-        border-radius: 14px;
-        border-left: 4px solid var(--user-color);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        border-top: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    /* THE GLITCH ENTRANCE ANIMATION */
-    :global(.glitch-entry) {
-        animation: glitchIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-    }
-
-    @keyframes glitchIn {
-        0% { transform: translateX(-50px) skewX(20deg); opacity: 0; filter: hue-rotate(90deg); }
-        60% { transform: translateX(5px) skewX(-10deg); opacity: 1; filter: hue-rotate(0deg); }
-        80% { transform: translateX(-2px) skewX(5deg); }
-        100% { transform: translateX(0) skewX(0deg); }
-    }
-
-    :global(.user-name) {
-        font-family: 'Inter', sans-serif;
-        font-weight: 900;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        display: block;
-        margin-bottom: 4px;
-    }
-
-    :global(.message-text) {
-        font-family: 'Inter', sans-serif;
-        color: #ffffff;
-        font-size: 1rem;
-        line-height: 1.4;
-        word-break: break-word;
-    }
-</style>
+</body>
+</html>
