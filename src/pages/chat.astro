@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import '../styles/chat-select.css';
 ---
 
-<Layout title="VOID14 | SELECT_SOURCE">
+<Layout title="void14|select channel">
     <main id="selection-screen">
         <div class="header-section">
             <h1 class="grid-title">PROTOCOL: SELECT_UPLINK_SOURCE</h1>
@@ -48,7 +48,7 @@ import '../styles/chat-select.css';
                         <span>${user.display_name}</span>
                     `;
 
-                    // Click handler to route to /chat/[channel]
+                    // Click handler to route to /chat-overlay?channel=[channel]
                     card.onclick = () => {
                         systemText.innerText = `ESTABLISHING_UPLINK: ${user.login.toUpperCase()}...`;
                         // This matches your flat file structure src/pages/chat/[channel].astro
