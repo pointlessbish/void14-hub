@@ -12,7 +12,7 @@ node_modules/
 .env.local
 .env.*.local
 .dev.vars
-
+.bot/
 # --- Cloudflare Specific ---
 .wrangler/
 
