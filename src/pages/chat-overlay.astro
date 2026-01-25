@@ -6,27 +6,21 @@ export const prerender = false;
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>VOID14 | Full Width Auto-PFP Overlay</title>
+    <title>VOID14 | Full Event & Redeem Overlay</title>
     <style is:global>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap');
 
-        /* 1. Global Setup */
         html, body {
             margin: 0; padding: 0;
             background: transparent !important;
-            background-color: rgba(0,0,0,0) !important;
             overflow: hidden;
             font-family: 'Inter', sans-serif;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* 2. Chat Container - Stretches to full width */
         #chat-log {
             position: absolute;
-            bottom: 30px; 
-            left: 0;
-            right: 0;
-            width: auto;
+            bottom: 30px; left: 0; right: 0;
             display: flex;
             flex-direction: column-reverse; 
             gap: 12px;
@@ -35,66 +29,58 @@ export const prerender = false;
             margin: 0;
         }
 
-        /* 3. The Nutty "Pill" - Full Width */
         .message-pill {
             display: flex;
             align-items: center;
             background: rgba(18, 18, 18, 0.85);
             backdrop-filter: blur(8px);
-            padding: 10px 18px;
+            padding: 12px 20px;
             border-radius: 12px;
-            width: calc(100% - 36px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            width: calc(100% - 40px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            animation: nuttySlide 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+            animation: nuttySlide 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
         }
 
-        /* 4. Avatars & Badges */
-        .avatar-badge {
-            width: 36px; height: 36px; border-radius: 50%;
-            margin-right: 14px; border: 2px solid var(--user-color, #555);
-            flex-shrink: 0; object-fit: cover; background: #1a1a1a;
-            transition: opacity 0.3s ease;
+        /* Event Styles */
+        .event-pill {
+            background: linear-gradient(90deg, rgba(145, 71, 255, 0.9), rgba(18, 18, 18, 0.9));
+            border: 1px solid rgba(145, 71, 255, 0.5);
+        }
+        .announcement-pill {
+            background: rgba(43, 203, 186, 0.2);
+            border: 2px solid #2bcbba;
+        }
+        /* Redeem Style */
+        .redeem-pill {
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.2), rgba(18, 18, 18, 0.9));
+            border: 2px solid #ffd700;
         }
 
         .badges-container {
             display: inline-flex;
-            gap: 4px;
-            margin-right: 10px;
+            gap: 6px;
+            margin-right: 12px;
             align-items: center;
             flex-shrink: 0;
         }
 
-        .badge-icon {
-            width: 18px; height: 18px; 
-            object-fit: contain;
-        }
-
-        /* 5. Typography */
-        .user-name { font-weight: 800; font-size: 1rem; margin-right: 6px; white-space: nowrap; }
+        .badge-icon { width: 18px; height: 18px; object-fit: contain; }
+        .user-name { font-weight: 800; font-size: 1rem; margin-right: 6px; }
         .separator { color: #ffffff; opacity: 0.4; margin-right: 10px; font-weight: 700; }
-        .message-text { 
-            color: #ffffff; 
-            font-size: 1.05rem; 
-            line-height: 1.4; 
-            word-break: break-word;
-            flex-grow: 1;
-        }
+        .message-text { color: #ffffff; font-size: 1.05rem; line-height: 1.4; flex-grow: 1; }
+        .event-text { font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #fff; }
 
-        /* 6. Animations */
         @keyframes nuttySlide {
-            from { opacity: 0; transform: translateY(15px) scale(0.98); }
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .fade-out { animation: fadeAway 0.5s ease-in forwards; }
-        @keyframes fadeAway {
-            to { opacity: 0; transform: translateX(30px); filter: blur(4px); }
-        }
+        @keyframes fadeAway { to { opacity: 0; transform: translateX(40px); filter: blur(8px); } }
     </style>
 </head>
 <body>
-
     <ul id="chat-log"></ul>
 
     <script>
@@ -104,103 +90,95 @@ export const prerender = false;
         const params = new URLSearchParams(window.location.search);
         const channel = (params.get('channel') || 'pointlessbish').toLowerCase();
 
-        // Local cache so we only ask the API once per user per session
-        let avatarCache = {};
-
-        // Badge Mapping
         const BADGE_BASE = "https://static-cdn.jtvnw.net/badges/v1";
         const GLOBAL_BADGES = {
             'broadcaster': `https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/1`,
             'moderator':   `${BADGE_BASE}/3267646d-33f0-4b17-b3df-f923a41db1d0/1`,
             'vip':         `${BADGE_BASE}/b817aba4-fad8-49e2-b88a-7cc744dfa6ec/1`,
-            'partner':     `${BADGE_BASE}/d12a2e27-16f6-41d0-ab77-b780518f00a3/1`,
-            'premium':     `${BADGE_BASE}/bbbe0db0-a598-423e-86d0-f9fb98ca1933/1`, 
             'subscriber':  `${BADGE_BASE}/5d9f2208-5dd8-11e7-8513-2ff4adfae661/1`, 
         };
 
+        function createPill(content, customClass = '') {
+            const li = document.createElement('li');
+            li.className = `message-pill ${customClass}`;
+            li.innerHTML = content;
+            chatLog.prepend(li);
+            setTimeout(() => {
+                li.classList.add('fade-out');
+                setTimeout(() => li.remove(), 550);
+            }, 20000);
+        }
+
         function getBadgesHTML(badges, username) {
             let html = '<div class="badges-container">';
-            if (username === channel) {
-                html += `<img src="${GLOBAL_BADGES['broadcaster']}" class="badge-icon" alt="broadcaster">`;
-            }
+            if (username === channel) html += `<img src="${GLOBAL_BADGES['broadcaster']}" class="badge-icon">`;
             if (badges) {
                 Object.keys(badges).forEach(type => {
                     if (type === 'broadcaster' && username === channel) return;
                     const url = GLOBAL_BADGES[type];
-                    if (url) html += `<img src="${url}" class="badge-icon" alt="${type}">`;
+                    if (url) html += `<img src="${url}" class="badge-icon">`;
                 });
             }
             html += '</div>';
             return html === '<div class="badges-container"></div>' ? '' : html;
         }
 
-        async function start() {
-            // Optional: Load your VOID14 curated members list first
-            try {
-                const res = await fetch('https://api.void14.wtf');
-                const data = await res.json();
-                data.users.forEach(u => avatarCache[u.login.toLowerCase()] = u.profile_image_url);
-            } catch (e) { console.warn("VOID_API_OFFLINE"); }
+        const client = new tmi.Client({
+            connection: { secure: true, reconnect: true },
+            channels: [channel]
+        });
 
-            const client = new tmi.Client({
-                connection: { secure: true, reconnect: true },
-                channels: [channel]
-            });
+        // 1. MESSAGES, ANNOUNCEMENTS, & REDEEMS (with text)
+        client.on('message', (chan, tags, message, self) => {
+            if (self) return;
+            
+            // Check for Reward ID (Channel Points)
+            const isRedeem = tags['custom-reward-id'] !== undefined;
+            const isAnnouncement = tags['msg-id'] === 'announcement';
+            
+            const color = tags.color || '#00ffff';
+            const badges = getBadgesHTML(tags.badges, tags.username);
 
-            client.on('message', async (chan, tags, message, self) => {
-                if (self) return;
+            let content = `
+                ${badges}
+                <span class="user-name" style="color: ${color}">${tags['display-name']}</span>
+                <span class="separator">:</span>
+                <span class="message-text">${message}</span>
+            `;
 
-                const username = tags.username.toLowerCase();
-                const displayName = tags['display-name'];
-                const userColor = tags.color || '#00ffff';
-                
-                const li = document.createElement('li');
-                li.className = 'message-pill';
-                li.style.setProperty('--user-color', userColor);
+            if (isRedeem) {
+                createPill(content, 'redeem-pill');
+            } else if (isAnnouncement) {
+                createPill(content, 'announcement-pill');
+            } else {
+                createPill(content);
+            }
+        });
 
-                const badgesHTML = getBadgesHTML(tags.badges, username);
-                
-                // Fallback PFP until the API call finishes
-                let pfpUrl = avatarCache[username] || `https://ui-avatars.com/api/?name=${username}&background=333&color=fff`;
+        // 2. SUBS & GIFTS
+        client.on('subscription', (chan, username) => {
+            createPill(`<span class="event-text">💜 NEW SUB: ${username} joined!</span>`, 'event-pill');
+        });
 
-                li.innerHTML = `
-                    <img class="avatar-badge" src="${pfpUrl}" id="pfp-${tags.id}">
-                    ${badgesHTML}
-                    <span class="user-name" style="color: ${userColor}">${displayName}</span>
-                    <span class="separator">:</span>
-                    <span class="message-text">${message}</span>
-                `;
+        client.on('resub', (chan, username, months) => {
+            createPill(`<span class="event-text">💜 RESUB: ${username} for ${months} months!</span>`, 'event-pill');
+        });
 
-                chatLog.prepend(li);
+        client.on('subgift', (chan, gifter, recipient) => {
+            createPill(`<span class="event-text">🎁 ${gifter} gifted a sub to ${recipient}!</span>`, 'event-pill');
+        });
 
-                // AUTOMATIC PFP FETCH: 
-                // If this is a random chatter not in our cache, ask the API to look them up.
-                if (!avatarCache[username]) {
-                    try {
-                        const response = await fetch(`https://api.void14.wtf/pfp/${username}`);
-                        const data = await response.json();
-                        
-                        if (data && data.profile_image_url) {
-                            avatarCache[username] = data.profile_image_url; // Save for next time
-                            const img = document.getElementById(`pfp-${tags.id}`);
-                            if (img) img.src = data.profile_image_url; // Update current message
-                        }
-                    } catch (e) {
-                        console.error("PFP Lookup Failed for:", username);
-                    }
-                }
+        // 3. RAIDS
+        client.on('raided', (chan, username, viewers) => {
+            createPill(`<span class="event-text">⚔️ RAID: ${username} brought ${viewers} viewers!</span>`, 'event-pill');
+        });
 
-                // Auto-cleanup
-                setTimeout(() => {
-                    li.classList.add('fade-out');
-                    setTimeout(() => li.remove(), 550);
-                }, 20000);
-            });
+        // 4. BITS
+        client.on('cheer', (chan, tags, message) => {
+            createPill(`<span class="event-text">💎 ${tags.username} cheered ${tags.bits} bits!</span>`, 'event-pill');
+        });
 
-            await client.connect();
-        }
-
-        start();
+        client.connect();
     </script>
 </body>
 </html>
