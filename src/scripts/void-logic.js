@@ -13,10 +13,11 @@ const socialConfig = {
     'theonegree': {},
     'adventure_skittzy': {},
     'mahzzi_':{youtube:'@MahzziStreams', tiktok: 'mahzzistreams'},
+    'amarahjabar':{youtube:'@amarahjabar', tiktok: 'amarah_jabar'},
 };
 
 const masterOrder = [
-    'pointlessbish', 'sog78', 'mothmxnch', 'cantdropsoap',
+    'pointlessbish', 'sog78', 'mothmxnch', 'cantdropsoap', 'amarahjabar',
     'dacobra1990', 'mahzzi_', 'adventure_skittzy', 'srvent_',
     'mrwatson_gaming', 'radiatorpapi', 'theonegree', 'nebbay'
 ];
