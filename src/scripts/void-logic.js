@@ -127,4 +127,4 @@ export function initGlitch() {
 // Initializing
 initGlitch();
 refreshVoid();
-setInterval(refreshVoid, 60000); // 1 minute refresh
+setInterval(refreshVoid, 300000); // 1 minute refresh
