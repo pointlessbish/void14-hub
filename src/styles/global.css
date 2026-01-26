@@ -61,7 +61,7 @@ body {
     animation: scanlineScroll 0.25s linear infinite;
 }
 
-/* 2. The Slow Scroll-Scanline Beam (from your old site) */
+/* 2. The Slow Scroll-Scanline Beam */
 .scanline::after {
     content: "";
     position: absolute;
@@ -72,7 +72,7 @@ body {
     background: linear-gradient(
         to bottom,
         transparent,
-        rgba(0, 242, 255, 0.04), /* Subtle cyan beam */
+        rgba(0, 242, 255, 0.04), 
         transparent
     );
     animation: scanBeam 8s linear infinite;
@@ -155,7 +155,6 @@ body {
     transition: transform 0.2s ease;
 }
 
-/* Animated Live Border (Purple & Cyan) */
 .is-live {
     border: 1px solid transparent;
     background: 
@@ -241,7 +240,6 @@ body {
     transform: translateY(-2px);
 }
 
-/* TikTok Hover Gradient (Cyan & Pink) */
 .social-icon.tiktok:hover {
     border: 1px solid transparent;
     background: 
@@ -267,4 +265,36 @@ footer {
     font-size: 0.65rem;
     opacity: 0.3;
     letter-spacing: 2px;
+}
+
+/* --- REFRESH INDICATOR --- */
+
+.refresh-indicator {
+    position: fixed;
+    bottom: 15px;
+    right: 20px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    font-family: 'Inter', sans-serif;
+    pointer-events: none;
+    z-index: 100;
+    min-width: 180px;
+    text-align: right;
+    background: rgba(7, 3, 13, 0.6); /* Slight background for readability */
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.refresh-indicator::before {
+    content: '[';
+    margin-right: 6px;
+    color: var(--void-cyan);
+}
+
+.refresh-indicator::after {
+    content: ']';
+    margin-left: 6px;
+    color: var(--void-cyan);
 }

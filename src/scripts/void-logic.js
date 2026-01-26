@@ -1,5 +1,8 @@
 // src/scripts/void-logic.js
 
+const REFRESH_INTERVAL_MINS = 5;
+let secondsRemaining = REFRESH_INTERVAL_MINS * 60;
+
 const socialConfig = {
     'pointlessbish': { youtube: '@pointlessbish', discord: 'eyQR6AfGGh' },
     'sog78': { youtube: '@sog78', tiktok: 'sogchanka' },
@@ -31,16 +34,33 @@ function calculateUptime(startTime) {
     return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 }
 
+function runTimer() {
+    const indicator = document.getElementById('refresh-timer');
+    
+    setInterval(() => {
+        secondsRemaining--;
+
+        if (secondsRemaining <= 0) {
+            refreshVoid();
+            secondsRemaining = REFRESH_INTERVAL_MINS * 60; // Reset to 5:00
+        }
+
+        if (indicator) {
+            const mins = Math.floor(secondsRemaining / 60);
+            const secs = secondsRemaining % 60;
+            // Formats to 5:00, 4:59, etc.
+            indicator.innerText = `NEXT EXTRACTION IN ${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+    }, 1000);
+}
+
 export async function refreshVoid() {
     try {
         const workerUrl = 'https://api.void14.wtf'; 
-        
         const res = await fetch(`${workerUrl}?t=${Date.now()}`);
         
         if (!res.ok) throw new Error(`API error: ${res.status}`);
-        
         const { streams, users } = await res.json();
-        
         if (!users || users.length === 0) return;
 
         const container = document.getElementById('member-list');
@@ -127,4 +147,4 @@ export function initGlitch() {
 // Initializing
 initGlitch();
 refreshVoid();
-setInterval(refreshVoid, 300000); // 1 minute refresh
+runTimer();
