@@ -1,5 +1,10 @@
 /* Container for the whole page */
 #selection-screen {
+    /* FIX 1: Explicitly place the page content between the vignette (z:1) 
+       and the scanlines (z:200) from Layout.astro */
+    position: relative;
+    z-index: 10; 
+    
     padding: 40px 20px;
     display: flex;
     flex-direction: column;
@@ -10,11 +15,10 @@
 /* THE GRID SYSTEM */
 .streamer-grid {
     display: grid;
-    /* This creates as many 200px columns as fit, then grows them to fill space */
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 30px;
     width: 100%;
-    max-width: 1200px; /* Keeps the grid from getting too wide on ultrawide monitors */
+    max-width: 1200px;
     padding: 20px;
     justify-content: center;
 }
@@ -28,11 +32,27 @@
     cursor: pointer;
     background: rgba(255, 255, 255, 0.03);
     padding: 30px 20px;
-    border-radius: 32px; /* Very rounded like index.astro */
+    border-radius: 32px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    
+    /* FIX 2: Backdrop filter creates a new stacking context. 
+       Ensure it stays relative to the parent z-index. */
     backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    
     text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* FIX 3: HITBOX FIX 
+   This ensures that when the mouse is over the pfp or text, the browser 
+   still thinks it's only touching the .streamer-card square. */
+.streamer-card img,
+.streamer-card span,
+.streamer-card .card-glow {
+    pointer-events: none !important;
 }
 
 .streamer-card:hover {
@@ -40,7 +60,6 @@
     transform: translateY(-10px);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 255, 255, 0.1);
 
-    /* THE ONLY PART I'M FUCKING WITH: */
     border: 1px solid transparent;
     background: 
         linear-gradient(var(--glass-bg), var(--glass-bg)) padding-box, 
@@ -61,7 +80,7 @@
 
 .streamer-card:hover img {
     transform: scale(1.1);
-    border-color: #00ffff;
+    border-color: var(--void-cyan); /* Using your variable for consistency */
 }
 
 /* Name text */

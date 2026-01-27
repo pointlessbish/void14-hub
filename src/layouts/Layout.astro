@@ -25,6 +25,33 @@ const { title, isOverlay = false } = Astro.props;
 		
 		<slot />
 
+		<script is:inline>
+			// Initialize audio once
+			const uplinkSound = new Audio('/sounds/retro-blip.wav');
+			uplinkSound.volume = 0.15;
+			let activeElement = null;
+
+			// Global Listener: Handles sound for current and future elements
+			window.addEventListener('mouseover', (e) => {
+				const target = e.target.closest('.streamer-card');
+				
+				if (target && target !== activeElement) {
+					uplinkSound.currentTime = 0;
+					uplinkSound.play().catch(() => {
+						// Browsers block audio until the first user click
+					});
+					activeElement = target;
+				}
+			});
+
+			window.addEventListener('mouseout', (e) => {
+				const target = e.target.closest('.streamer-card');
+				if (target && !target.contains(e.relatedTarget)) {
+					activeElement = null;
+				}
+			});
+		</script>
+
 		<style is:global>
 			/* CSS Property Definition for Animated Borders */
 			@property --angle {
@@ -42,7 +69,11 @@ const { title, isOverlay = false } = Astro.props;
 				--glass-border: rgba(255, 255, 255, 0.1);
 			}
 
-			body { margin: 0; background-color: var(--bg-dark); }
+			body { 
+				margin: 0; 
+				background-color: var(--bg-dark); 
+				overflow-x: hidden;
+			}
 
 			/* THE DUAL SCANLINE SYSTEM */
 			.scanline {
@@ -62,6 +93,12 @@ const { title, isOverlay = false } = Astro.props;
 				background-image: url('/void14.png');
 				background-size: cover; background-position: center;
 				filter: blur(50px) brightness(0.2); transform: scale(1.1);
+			}
+
+			/* GLOBAL HITBOX FIX 
+			   Ensures children of streamer-card don't trigger their own hover events */
+			.streamer-card > * {
+				pointer-events: none !important;
 			}
 
 			@keyframes scanlineScroll { from { background-position: 0 0; } to { background-position: 0 4px; } }
