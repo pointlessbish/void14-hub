@@ -27,7 +27,7 @@ const { title, isOverlay = false } = Astro.props;
 
 		<script is:inline>
 			// Initialize audio once
-			const uplinkSound = new Audio('/sounds/retro-blip.wav');
+			const uplinkSound = new Audio('retro-blip.wav');
 			uplinkSound.volume = 0.15;
 			let activeElement = null;
 
