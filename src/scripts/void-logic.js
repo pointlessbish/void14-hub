@@ -21,7 +21,7 @@ const socialConfig = {
 
 const masterOrder = [
     'pointlessbish', 'sog78', 'mothmxnch', 'cantdropsoap', 'amarahjabar',
-    'dacobra1990', 'mahzzi_', 'adventure_skittzy', 'srvent_',
+    'dacobra1990', 'mahzzi_', 'amarahjabar', 'adventure_skittzy', 'srvent_',
     'mrwatson_gaming', 'radiatorpapi', 'theonegree', 'nebbay'
 ];
 
