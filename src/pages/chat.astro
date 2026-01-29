@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Footer from '../components/Footer.astro';
 import '../styles/chat-select.css';
 ---
 
@@ -24,46 +25,48 @@ import '../styles/chat-select.css';
                 <span class="pulse-text">SCANNING_FREQUENCIES...</span>
             </div>
         </div>
-
-        <div class="footer-status">
-            <span class="pulse-dot"></span> 
-            <span id="system-text">SYSTEM_READY: STANDING_BY</span>
-        </div>
     </main>
 
+    <Footer />
+
     <script is:inline>
+        // 1. LOCAL AUDIO CONFIG (No global window reliance)
+        const uplinkSound = new Audio('/sounds/retro-blip.wav');
+        uplinkSound.volume = 0.15;
+        let lastHoveredId = null;
+
         const bootScreen = document.getElementById('boot-screen');
         const initBtn = document.getElementById('initialize-btn');
+        const gridContainer = document.getElementById('grid-container');
 
+        // 2. BOOT & AUDIO UNLOCK
         initBtn.addEventListener('click', () => {
-            // Prime the global audio object
-            if (window.uplinkSound) {
-                window.uplinkSound.play().then(() => {
-                    window.uplinkSound.pause();
-                    window.uplinkSound.currentTime = 0;
-                    
-                    bootScreen.style.opacity = '0';
-                    setTimeout(() => {
-                        bootScreen.style.display = 'none';
-                        loadStreamerGrid();
-                    }, 500);
-                }).catch(e => {
-                    // Fallback if browser still grumbles
+            // Unlocks audio context for the domain
+            uplinkSound.play().then(() => {
+                uplinkSound.pause();
+                uplinkSound.currentTime = 0;
+                
+                bootScreen.style.opacity = '0';
+                setTimeout(() => {
                     bootScreen.style.display = 'none';
                     loadStreamerGrid();
-                });
-            }
+                }, 500);
+            }).catch(e => {
+                console.error("OS_AUDIO_ERROR:", e);
+                bootScreen.style.display = 'none';
+                loadStreamerGrid();
+            });
         });
 
+        // 3. DYNAMIC GRID LOADING
         async function loadStreamerGrid() {
-            const container = document.getElementById('grid-container');
-            const systemText = document.getElementById('system-text');
+            const systemText = document.getElementById('system-text-global');
             try {
                 const res = await fetch('https://api.void14.wtf');
                 if (!res.ok) throw new Error('API_OFFLINE');
                 const data = await res.json();
                 const users = data.users || [];
-                container.innerHTML = ''; 
+                gridContainer.innerHTML = ''; 
 
                 users.forEach(user => {
                     const card = document.createElement('div');
@@ -75,16 +78,36 @@ import '../styles/chat-select.css';
                         <span style="pointer-events: none;">${user.display_name}</span>
                     `;
                     card.onclick = () => {
-                        systemText.innerHTML = `ESTABLISHING_UPLINK: <span class="cyan-highlight">${user.login.toUpperCase()}</span>...`;
+                        if (systemText) systemText.innerHTML = `ESTABLISHING_UPLINK: ${user.login.toUpperCase()}...`;
                         window.location.href = `/chat-overlay?channel=${user.login.toLowerCase()}`;
                     };
-                    container.appendChild(card);
+                    gridContainer.appendChild(card);
                 });
-                systemText.innerHTML = `NODES_DETECTED: <span class="cyan-highlight">${users.length}</span> ACTIVE_CHANNELS`;
+                
+                if (systemText) systemText.innerHTML = `NODES_DETECTED: <span class="cyan-highlight">${users.length}</span> ACTIVE_CHANNELS`;
             } catch (err) {
-                systemText.innerHTML = `<span style="color: #ff0055;">CRITICAL_FAILURE: UNABLE_TO_SYNC</span>`;
+                if (systemText) systemText.innerHTML = `<span style="color: #ff0055;">CRITICAL_FAILURE: UNABLE_TO_SYNC</span>`;
             }
         }
+
+        // 4. LOCALIZED HOVER SOUND LOGIC
+        gridContainer.addEventListener('mouseover', (e) => {
+            const hitbox = e.target.closest('.card-hitbox');
+            if (hitbox) {
+                const card = hitbox.parentElement;
+                if (card !== lastHoveredId) {
+                    uplinkSound.currentTime = 0;
+                    uplinkSound.play().catch(() => {});
+                    lastHoveredId = card;
+                }
+            }
+        });
+
+        gridContainer.addEventListener('mouseout', (e) => {
+            if (e.target.classList.contains('card-hitbox')) {
+                lastHoveredId = null;
+            }
+        });
     </script>
 </Layout>
 
@@ -126,27 +149,13 @@ import '../styles/chat-select.css';
         padding-top: 80px;
     }
 
-    .footer-status {
-        position: fixed;
-        bottom: 30px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-family: 'Inter', sans-serif;
-        font-size: 0.65rem;
-        background: rgba(0,0,0,0.5);
-        padding: 5px 15px;
-        border-radius: 20px;
-        backdrop-filter: blur(5px);
-        z-index: 1100; /* Above scanlines */
-    }
-
     @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
 
-    /* CARD HITBOX */
+    /* CARD HITBOX - Must be z-indexed high to catch events through scanlines */
     :global(.card-hitbox) {
         position: absolute;
         inset: 0;
-        z-index: 1000; /* Above scanlines */
+        z-index: 1000; 
         cursor: pointer;
         pointer-events: auto;
     }

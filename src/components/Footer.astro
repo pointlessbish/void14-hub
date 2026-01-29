@@ -1,0 +1,27 @@
+<style>
+    .terminal-menu {
+        /* Change from position: fixed to relative or absolute */
+        position: relative; 
+        margin-top: auto; /* Pushes footer to bottom if parent is flex */
+        padding-bottom: 40px; /* Space from the very bottom of the screen */
+        z-index: 1100;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .menu-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: rgba(7, 3, 13, 0.85);
+        padding: 12px 30px;
+        border-radius: 12px;
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(0, 242, 255, 0.15);
+        /* Width is now controlled by content, but you can set a max-width */
+        max-width: 600px; 
+    }
+    
+    /* ... rest of your status and nav styles ... */
+</style>
