@@ -32,7 +32,7 @@ import '../styles/chat-select.css';
     </div>
 
     <script is:inline>
-        // 1. LOCAL AUDIO CONFIG
+        // 1. CONFIG & AUDIO
         const uplinkSound = new Audio('/sounds/retro-blip.wav');
         uplinkSound.volume = 0.15;
         let lastHoveredId = null;
@@ -41,11 +41,12 @@ import '../styles/chat-select.css';
         const initBtn = document.getElementById('initialize-btn');
         const gridContainer = document.getElementById('grid-container');
 
-        // 2. BOOT & AUDIO UNLOCK
+        // 2. INITIALIZE LOGIC
         initBtn.addEventListener('click', () => {
             uplinkSound.play().then(() => {
                 uplinkSound.pause();
                 uplinkSound.currentTime = 0;
+                document.body.classList.add('ready');
                 
                 bootScreen.style.opacity = '0';
                 setTimeout(() => {
@@ -53,7 +54,6 @@ import '../styles/chat-select.css';
                     loadStreamerGrid();
                 }, 500);
             }).catch(e => {
-                console.error("OS_AUDIO_ERROR:", e);
                 bootScreen.style.display = 'none';
                 loadStreamerGrid();
             });
@@ -74,9 +74,8 @@ import '../styles/chat-select.css';
                     card.className = 'streamer-card';
                     card.innerHTML = `
                         <div class="card-hitbox"></div>
-                        <div class="card-glow" style="pointer-events: none;"></div>
-                        <img src="${user.profile_image_url}" alt="${user.display_name}" style="pointer-events: none;">
-                        <span style="pointer-events: none;">${user.display_name}</span>
+                        <img src="${user.profile_image_url}" alt="${user.display_name}">
+                        <span class="streamer-name">${user.display_name}</span>
                     `;
                     card.onclick = () => {
                         if (systemText) systemText.innerHTML = `ESTABLISHING_UPLINK: ${user.login.toUpperCase()}...`;
@@ -91,7 +90,7 @@ import '../styles/chat-select.css';
             }
         }
 
-        // 4. LOCALIZED HOVER SOUND LOGIC
+        // 4. HOVER SOUNDS
         gridContainer.addEventListener('mouseover', (e) => {
             const hitbox = e.target.closest('.card-hitbox');
             if (hitbox) {
@@ -113,7 +112,117 @@ import '../styles/chat-select.css';
 </Layout>
 
 <style>
-    /* New Layout Container to force footer down */
+    /* 1. CUSTOM PROPERTY FOR SMOOTH GRADIENT ROTATION */
+    @property --angle {
+        syntax: '<angle>';
+        initial-value: 0deg;
+        inherits: false;
+    }
+
+    @keyframes rotate-border {
+        to { --angle: 360deg; }
+    }
+
+    /* 2. GLASSY CARD BASE */
+    :global(.streamer-card) {
+        position: relative;
+        background: rgba(15, 10, 25, 0.4);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 12px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        z-index: 1;
+        overflow: hidden;
+        border: 1px solid rgba(0, 242, 255, 0.15);
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s ease;
+    }
+
+    /* 3. THE ANIMATED BEAM (Corrected Scaling) */
+    :global(.streamer-card::before) {
+        content: "";
+        position: absolute;
+        /* inset -1px aligns precisely with the border edge */
+        inset: -1px;
+        z-index: -1;
+        /* padding 2px creates the thickness of the visible line */
+        padding: 2px;
+        border-radius: 12px;
+        
+        background: conic-gradient(
+            from var(--angle),
+            transparent 70%,
+            #00f2ff,
+            #9d00ff,
+            #00f2ff
+        );
+
+        /* Masking ensures the light ONLY shows in the 2px padding perimeter */
+        -webkit-mask: 
+            linear-gradient(#fff 0 0) content-box, 
+            linear-gradient(#fff 0 0);
+        mask: 
+            linear-gradient(#fff 0 0) content-box, 
+            linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+
+    /* 4. HOVER STATES */
+    :global(.streamer-card:hover) {
+        transform: translateY(-8px) scale(1.02);
+        background: rgba(15, 10, 25, 0.7);
+        border-color: rgba(0, 242, 255, 0); /* Hide static border to let beam shine */
+    }
+
+    :global(.streamer-card:hover::before) {
+        opacity: 1;
+        animation: rotate-border 3s linear infinite;
+    }
+
+    /* 5. CARD CONTENT */
+    :global(.streamer-card img) {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    :global(.streamer-card:hover img) {
+        border-color: #00f2ff;
+        transform: scale(1.05);
+        box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+    }
+
+    :global(.streamer-name) {
+        font-weight: 900;
+        font-size: 0.9rem;
+        letter-spacing: 2px;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        transition: color 0.3s ease;
+    }
+
+    :global(.streamer-card:hover .streamer-name) {
+        color: #fff;
+    }
+
+    :global(.card-hitbox) {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        cursor: pointer;
+    }
+
+    /* 6. PAGE STRUCTURE */
     .page-container {
         display: flex;
         flex-direction: column;
@@ -122,38 +231,42 @@ import '../styles/chat-select.css';
     }
 
     #selection-screen {
-        flex: 1; /* This pushes the footer to the bottom */
+        flex: 1;
         position: relative;
         z-index: 100;
-        padding-top: 80px;
+        padding: 100px 40px;
         display: flex;
         flex-direction: column;
         align-items: center;
     }
 
+    .streamer-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 30px;
+        width: 100%;
+        max-width: 1200px;
+        margin-top: 60px;
+    }
+
+    /* 7. BOOT SCREEN */
     #boot-screen {
         position: fixed;
         inset: 0;
-        z-index: 9999; /* Increased for production safety */
+        z-index: 99999;
         background: #07030d;
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
         transition: opacity 0.5s ease;
-        pointer-events: all;
     }
 
     #initialize-btn {
-        background: rgba(0, 242, 255, 0.05); /* Added subtle fill */
-        border: 2px solid #00f2ff; /* Hardcoded hex fallback for Cloudflare */
-        border: 2px solid var(--void-cyan);
+        background: rgba(0, 242, 255, 0.05);
+        border: 2px solid #00f2ff;
         padding: 15px 40px;
         cursor: pointer;
         margin-top: 20px;
-        position: relative;
-        z-index: 10000;
-        pointer-events: auto;
         transition: all 0.2s ease;
     }
 
@@ -164,31 +277,20 @@ import '../styles/chat-select.css';
 
     .pulse-text-init {
         animation: pulse 2s infinite;
-        font-family: 'Inter', sans-serif;
-        color: #00f2ff; /* Hardcoded hex fallback */
-        color: var(--void-cyan);
         font-weight: 900;
+        color: #00f2ff;
         letter-spacing: 2px;
     }
 
     .terminal-loader {
-        font-family: 'Inter', sans-serif;
         color: rgba(255, 255, 255, 0.4);
         font-size: 0.8rem;
         letter-spacing: 2px;
+        text-align: center;
     }
 
     @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
 
-    :global(.card-hitbox) {
-        position: absolute;
-        inset: 0;
-        z-index: 1000; 
-        cursor: pointer;
-        pointer-events: auto;
-    }
-
-    .grid-title { font-family: 'Inter', sans-serif; font-weight: 900; font-size: 1.5rem; letter-spacing: 4px; color: #fff; margin: 0; text-align: center; }
-    .subtitle { font-family: 'Inter', sans-serif; font-size: 0.7rem; color: #00f2ff; color: var(--void-cyan); opacity: 0.6; margin-top: 5px; text-transform: uppercase; text-align: center; }
-    .cyan-highlight { color: #00f2ff; color: var(--void-cyan); text-shadow: 0 0 8px #00f2ff; font-weight: 900; }
+    .grid-title { font-weight: 900; font-size: 1.5rem; letter-spacing: 4px; color: #fff; margin: 0; }
+    .subtitle { font-size: 0.7rem; color: #00f2ff; opacity: 0.6; margin-top: 5px; text-transform: uppercase; }
 </style>
