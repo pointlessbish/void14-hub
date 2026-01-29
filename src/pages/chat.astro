@@ -14,23 +14,25 @@ import '../styles/chat-select.css';
         </div>
     </div>
 
-    <main id="selection-screen">
-        <div class="header-section">
-            <h1 class="grid-title">PROTOCOL: SELECT_UPLINK_SOURCE</h1>
-            <p class="subtitle">CONNECTING_TO_ACTIVE_NODES...</p>
-        </div>
-        
-        <div id="grid-container" class="streamer-grid">
-            <div class="loading-state"> 
-                <span class="pulse-text">SCANNING_FREQUENCIES...</span>
+    <div class="page-container">
+        <main id="selection-screen">
+            <div class="header-section">
+                <h1 class="grid-title">PROTOCOL: SELECT_UPLINK_SOURCE</h1>
+                <p class="subtitle">CONNECTING_TO_ACTIVE_NODES...</p>
             </div>
-        </div>
-    </main>
+            
+            <div id="grid-container" class="streamer-grid">
+                <div class="loading-state"> 
+                    <span class="pulse-text">SCANNING_FREQUENCIES...</span>
+                </div>
+            </div>
+        </main>
 
-    <Footer />
+        <Footer />
+    </div>
 
     <script is:inline>
-        // 1. LOCAL AUDIO CONFIG (No global window reliance)
+        // 1. LOCAL AUDIO CONFIG
         const uplinkSound = new Audio('/sounds/retro-blip.wav');
         uplinkSound.volume = 0.15;
         let lastHoveredId = null;
@@ -41,7 +43,6 @@ import '../styles/chat-select.css';
 
         // 2. BOOT & AUDIO UNLOCK
         initBtn.addEventListener('click', () => {
-            // Unlocks audio context for the domain
             uplinkSound.play().then(() => {
                 uplinkSound.pause();
                 uplinkSound.currentTime = 0;
@@ -112,12 +113,31 @@ import '../styles/chat-select.css';
 </Layout>
 
 <style>
+    /* New Layout Container to force footer down */
+    .page-container {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        width: 100%;
+    }
+
+    #selection-screen {
+        flex: 1; /* This pushes the footer to the bottom */
+        position: relative;
+        z-index: 100;
+        padding-top: 80px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
     #boot-screen {
         position: fixed;
         inset: 0;
-        z-index: 2000;
+        z-index: 9999; /* Increased for production safety */
         background: #07030d;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         transition: opacity 0.5s ease;
@@ -125,33 +145,41 @@ import '../styles/chat-select.css';
     }
 
     #initialize-btn {
-        background: transparent;
-        border: 1px solid var(--void-cyan);
-        padding: 15px 30px;
+        background: rgba(0, 242, 255, 0.05); /* Added subtle fill */
+        border: 2px solid #00f2ff; /* Hardcoded hex fallback for Cloudflare */
+        border: 2px solid var(--void-cyan);
+        padding: 15px 40px;
         cursor: pointer;
         margin-top: 20px;
         position: relative;
-        z-index: 2001;
+        z-index: 10000;
         pointer-events: auto;
+        transition: all 0.2s ease;
+    }
+
+    #initialize-btn:hover {
+        background: rgba(0, 242, 255, 0.15);
+        box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
     }
 
     .pulse-text-init {
         animation: pulse 2s infinite;
         font-family: 'Inter', sans-serif;
+        color: #00f2ff; /* Hardcoded hex fallback */
         color: var(--void-cyan);
         font-weight: 900;
         letter-spacing: 2px;
     }
 
-    #selection-screen {
-        position: relative;
-        z-index: 100;
-        padding-top: 80px;
+    .terminal-loader {
+        font-family: 'Inter', sans-serif;
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.8rem;
+        letter-spacing: 2px;
     }
 
     @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
 
-    /* CARD HITBOX - Must be z-indexed high to catch events through scanlines */
     :global(.card-hitbox) {
         position: absolute;
         inset: 0;
@@ -160,8 +188,7 @@ import '../styles/chat-select.css';
         pointer-events: auto;
     }
 
-    /* TYPOGRAPHY */
     .grid-title { font-family: 'Inter', sans-serif; font-weight: 900; font-size: 1.5rem; letter-spacing: 4px; color: #fff; margin: 0; text-align: center; }
-    .subtitle { font-family: 'Inter', sans-serif; font-size: 0.7rem; color: var(--void-cyan); opacity: 0.6; margin-top: 5px; text-transform: uppercase; text-align: center; }
-    .cyan-highlight { color: var(--void-cyan); text-shadow: 0 0 8px var(--void-cyan); font-weight: 900; }
+    .subtitle { font-family: 'Inter', sans-serif; font-size: 0.7rem; color: #00f2ff; color: var(--void-cyan); opacity: 0.6; margin-top: 5px; text-transform: uppercase; text-align: center; }
+    .cyan-highlight { color: #00f2ff; color: var(--void-cyan); text-shadow: 0 0 8px #00f2ff; font-weight: 900; }
 </style>
