@@ -1,54 +1,93 @@
-/* Container for the whole page */
+/* chat-select.css */
+
+/* 1. ROOT CONTAINER & CENTERING */
 #selection-screen {
-    /* FIX 1: Explicitly place the page content between the vignette (z:1) 
-       and the scanlines (z:200) from Layout.astro */
     position: relative;
-    z-index: 10; 
-    
-    padding: 40px 20px;
+    /* Content layer (below hitboxes/boot-screen but above background) */
+    z-index: 100; 
+    padding: 80px 20px;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    /* This centers the header-section and the streamer-grid themselves */
+    align-items: center; 
     min-height: 100vh;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-/* THE GRID SYSTEM */
+/* 2. THE GRID SYSTEM */
 .streamer-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    /* repeat(auto-fit) with a fixed px ensures columns group together */
+    grid-template-columns: repeat(auto-fit, 200px); 
     gap: 30px;
     width: 100%;
-    max-width: 1200px;
-    padding: 20px;
-    justify-content: center;
+    /* Prevents the grid from becoming too wide on large screens */
+    max-width: 1200px; 
+    padding: 40px 20px;
+    /* Magic line: Centers the items within the grid container */
+    justify-content: center; 
+    /* Ensures items start at the top */
+    align-content: start; 
 }
 
-/* Individual Cards - Rounded & Sleek */
+/* 3. HEADER TYPOGRAPHY */
+.header-section {
+    text-align: center;
+    width: 100%;
+    margin-bottom: 50px;
+}
+
+.grid-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-size: 1.5rem;
+    letter-spacing: 4px;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    margin: 0;
+}
+
+.subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.7rem;
+    color: var(--void-cyan);
+    opacity: 0.6;
+    margin-top: 5px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+/* 4. STREAMER CARDS */
 .streamer-card {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
     background: rgba(255, 255, 255, 0.03);
     padding: 30px 20px;
     border-radius: 32px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    
-    /* FIX 2: Backdrop filter creates a new stacking context. 
-       Ensure it stays relative to the parent z-index. */
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    
     text-align: center;
     position: relative;
-    overflow: hidden;
+    z-index: 100;
 }
 
-/* FIX 3: HITBOX FIX 
-   This ensures that when the mouse is over the pfp or text, the browser 
-   still thinks it's only touching the .streamer-card square. */
+/* 5. INTERACTION LAYER (The Hitbox) */
+/* This sits above the card visuals and scanlines to capture hover sounds */
+.card-hitbox {
+    position: absolute;
+    inset: 0;
+    z-index: 1000; 
+    cursor: pointer;
+    border-radius: 32px;
+    pointer-events: auto !important;
+}
+
+/* Prevent child elements from stealing the hover/click event */
 .streamer-card img,
 .streamer-card span,
 .streamer-card .card-glow {
@@ -59,7 +98,6 @@
     background: rgba(255, 255, 255, 0.07);
     transform: translateY(-10px);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 255, 255, 0.1);
-
     border: 1px solid transparent;
     background: 
         linear-gradient(var(--glass-bg), var(--glass-bg)) padding-box, 
@@ -67,7 +105,7 @@
     animation: rotateGradient 4s linear infinite;
 }
 
-/* Rounded Avatars */
+/* 6. CARD CONTENT */
 .streamer-card img {
     width: 100px;
     height: 100px;
@@ -80,10 +118,9 @@
 
 .streamer-card:hover img {
     transform: scale(1.1);
-    border-color: var(--void-cyan); /* Using your variable for consistency */
+    border-color: var(--void-cyan);
 }
 
-/* Name text */
 .streamer-card span {
     font-family: 'Inter', sans-serif;
     font-weight: 900;
@@ -91,4 +128,44 @@
     color: #fff;
     text-transform: uppercase;
     letter-spacing: 1px;
+}
+
+/* 7. SYSTEM STATUS FOOTER */
+.footer-status {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0,0,0,0.5);
+    padding: 5px 15px;
+    border-radius: 20px;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.05);
+    z-index: 1100; /* Above scanlines */
+}
+
+.cyan-highlight {
+    color: var(--void-cyan);
+    text-shadow: 0 0 8px var(--void-cyan);
+    font-weight: 900;
+}
+
+.pulse-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--void-cyan);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--void-cyan);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
 }
