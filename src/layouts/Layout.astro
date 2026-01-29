@@ -1,31 +1,109 @@
 ---
+import Sidebar from '../components/Sidebar.astro';
+
 interface Props {
 	title: string;
 	isOverlay?: boolean;
 }
+
 const { title, isOverlay = false } = Astro.props;
 ---
+
 <!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<title>{title}</title>
 		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 	</head>
-	<body class={isOverlay ? "overlay-mode" : "standard-mode"}>
+	<body class={isOverlay ? "overlay-mode" : ""}>
 		{!isOverlay && (
 			<>
 				<div class="background-vignette"></div>
 				<div class="scanline"></div>
+				
+				<Sidebar />
 			</>
 		)}
-		<slot />
+		
+		<main class="content-wrapper">
+			<slot />
+		</main>
+
 		<style is:global>
-            /* Keep your @property --angle and root variables here */
-			body { margin: 0; background-color: #07030d; overflow-x: hidden; }
-			.scanline { position: fixed; inset: 0; z-index: 500; pointer-events: none; background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.18) 51%); background-size: 100% 4px; }
-			.background-vignette { position: fixed; inset: 0; z-index: 1; background-image: url('/void14.png'); background-size: cover; filter: blur(50px) brightness(0.2); }
+			:root {
+				--bg-dark: #07030d;
+				--void-cyan: #00f2ff;
+				--sidebar-w: 72px;
+			}
+
+			* { box-sizing: border-box; }
+
+			html, body {
+				margin: 0;
+				padding: 0;
+				background-color: var(--bg-dark);
+				color: white;
+				font-family: 'Inter', sans-serif;
+				min-height: 100vh;
+				overflow-x: hidden;
+			}
+
+			/* THE FIX: Permanent padding on desktop ensures the link-tree
+			   or node grid doesn't "snap" or break when the sidebar 
+			   initializes after the click-to-start screen.
+			*/
+			@media (min-width: 1024px) {
+				body:not(.overlay-mode) {
+					padding-left: var(--sidebar-w) !important;
+				}
+			}
+
+			.content-wrapper {
+				position: relative;
+				z-index: 10;
+				min-height: 100vh;
+				display: flex;
+				flex-direction: column;
+			}
+
+			/* Retro Terminal Overlay Effects */
+			.scanline {
+				position: fixed;
+				inset: 0;
+				z-index: 100000; 
+				pointer-events: none;
+				background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.18) 51%);
+				background-size: 100% 4px;
+				animation: scanlineScroll 0.25s linear infinite;
+			}
+
+			.background-vignette {
+				position: fixed;
+				inset: 0;
+				z-index: 1;
+				background-image: url('/void14.png');
+				background-size: cover;
+				background-position: center;
+				filter: blur(50px) brightness(0.2);
+				transform: scale(1.1);
+				pointer-events: none;
+			}
+
+			@keyframes scanlineScroll {
+				from { background-position: 0 0; }
+				to { background-position: 0 4px; }
+			}
+
+			/* Global Utility for dynamic JS text injection */
+			.cyan-highlight {
+				color: var(--void-cyan) !important;
+				text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+				font-weight: 900;
+			}
 		</style>
 	</body>
 </html>

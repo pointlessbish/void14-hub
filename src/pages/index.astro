@@ -1,6 +1,7 @@
 ---
 // src/pages/index.astro
 import '../styles/global.css';
+import Footer from '../components/Footer.astro';
 
 const title = "void14 | the collective";
 const description = "Extracting from the void. Official hub for VOID14.";
@@ -40,11 +41,27 @@ const description = "Extracting from the void. Official hub for VOID14.";
             <div class="loading">Infiltrating the Void...</div>
         </div>
 
-        <footer>&copy; 2026 VOID14.WTF built by pointlessbish</footer>
+        <Footer />
     </div>
 
     <div id="refresh-timer" class="refresh-indicator"></div>
 
     <script src="../scripts/void-logic.js"></script>
+
+    <style is:global>
+        /* Ensuring index.astro has the variables the Footer needs */
+        :root {
+            --void-cyan: #00f2ff;
+            --void-purple: #9d00ff;
+        }
+
+        /* Fix for index.astro to ensure Footer doesn't overlap content */
+        .container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding-bottom: 100px; /* Space for fixed footer */
+        }
+    </style>
 </body>
 </html>

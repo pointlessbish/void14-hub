@@ -1,0 +1,132 @@
+---
+const { pathname } = Astro.url;
+const currentPath = pathname.replace(/\/$/, "");
+---
+<aside class="ubuntu-dock">
+    <div class="dock-content">
+        
+        <div class="dock-section top">
+            <a href="/" class="logo-link">
+                <img src="/void14.png" alt="V14" />
+            </a>
+        </div>
+
+        <nav class="dock-section middle">
+            <div class="nav-links">
+                <a href="/" class={`nav-icon ${currentPath === "" ? "active" : ""}`} title="Home">
+                    <i class="fa-solid fa-house"></i>
+                    {currentPath === "" && <div class="dot-indicator"></div>}
+                </a>
+                <a href="/chat" class={`nav-icon ${currentPath === "/chat" ? "active" : ""}`} title="Nodes">
+                    <i class="fa-solid fa-network-wired"></i>
+                    {currentPath === "/chat" && <div class="dot-indicator"></div>}
+                </a>
+            </div>
+        </nav>
+
+        <div class="dock-section bottom">
+            <div class="status-stack">
+                <div class="status-text-wrap">
+                    <span id="system-text-global" class="vertical-text">NODES_ACTIVE</span>
+                </div>
+                <div class="pulse-dot"></div>
+            </div>
+        </div>
+
+    </div>
+</aside>
+
+<style>
+    .ubuntu-dock {
+        position: fixed;
+        left: 0; top: 0; bottom: 0;
+        width: 72px;
+        background: rgba(7, 3, 13, 0.9);
+        border-right: 1px solid rgba(0, 242, 255, 0.15);
+        backdrop-filter: blur(15px);
+        z-index: 11000;
+    }
+
+    @media (max-width: 1023px) {
+        .ubuntu-dock { display: none; }
+    }
+
+    .dock-content {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 40px 0;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    /* Logo Styling */
+    .logo-link img {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        opacity: 0.6;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Nav Styling */
+    .nav-links {
+        display: flex;
+        flex-direction: column;
+        gap: 35px;
+    }
+    .nav-icon {
+        font-size: 1.4rem;
+        color: rgba(255, 255, 255, 0.2);
+        text-decoration: none;
+        position: relative;
+    }
+    .nav-icon.active { color: #00f2ff; }
+    .dot-indicator {
+        position: absolute;
+        left: -20px;
+        width: 4px;
+        height: 24px;
+        background: #00f2ff;
+        box-shadow: 0 0 15px #00f2ff;
+        border-radius: 0 4px 4px 0;
+    }
+
+    /* Status at Bottom */
+    .status-stack {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
+        background: #00f2ff;
+        border-radius: 50%;
+        box-shadow: 0 0 12px #00f2ff;
+        animation: pulseGlow 1.5s infinite;
+    }
+
+    .status-text-wrap {
+        height: 140px;
+        display: flex;
+        align-items: center;
+    }
+
+    .vertical-text {
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 3px;
+        color: rgba(0, 242, 255, 0.4);
+        text-transform: uppercase;
+    }
+
+    @keyframes pulseGlow {
+        0%, 100% { opacity: 0.4; transform: scale(0.9); }
+        50% { opacity: 1; transform: scale(1.1); }
+    }
+</style>
